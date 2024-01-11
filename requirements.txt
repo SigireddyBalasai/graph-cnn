@@ -1,0 +1,6 @@
+igraph
+pycairo
+matplotlib
+networkx
+tensorflow
+pydot
