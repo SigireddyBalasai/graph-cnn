@@ -65,7 +65,7 @@ def create_model(graph, input_shape=(224, 224, 3)):
                 nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
                 nodes[node] = tf.keras.layers.Dropout(0.8)(nodes[node])
-    output_concat = tf.keras.layers.Add()(nodes)
+    output_concat = tf.keras.layers.Concatenate()(nodes)
     model = tf.keras.Model(inputs=input_layer, outputs=output_concat)
     return model    
 
