@@ -32,6 +32,9 @@ def create_model(graph, input_shape=(224, 224, 3)):
                 for predecessor in predecessors:
                     if nodes[predecessor].shape[-1] != req_shape:
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(1, 1))(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Dropout(0.8)(nodes[predecessor])
                 concat = tf.keras.layers.Add()([nodes[predecessor] for predecessor in predecessors])
             else:
                 concat = nodes[predecessors[0]]
@@ -40,6 +43,7 @@ def create_model(graph, input_shape=(224, 224, 3)):
                 nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], padding='same')(concat)
                 nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node]) 
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(0.8)(nodes[node])
             elif graph.nodes[node]['state'] == "MaxPooling":
                 nodes[node] = tf.keras.layers.MaxPooling2D(pool_size=graph.nodes[node]['kernel_size'], strides=1, padding='same')(concat)
                 nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node]) 
@@ -50,7 +54,7 @@ def create_model(graph, input_shape=(224, 224, 3)):
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
 
         if graph.nodes[node]['state'] == "Convolution" or graph.nodes[node]['state'] == "MaxPooling" or graph.nodes[node]['state'] == "AveragePooling":
-            dropout_prob = random.uniform(0.3, 1)
+            dropout_prob = random.uniform(0.7, 1)
             nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     nodes = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     req_shape = min(nodes, key=lambda x: x.shape[-1]).shape[-1]
@@ -58,6 +62,9 @@ def create_model(graph, input_shape=(224, 224, 3)):
     for node in range(len(nodes)):
             if nodes[node].shape[-1] != req_shape:
                 nodes[node] = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(nodes[node])
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
+                nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(0.8)(nodes[node])
     output_concat = tf.keras.layers.Add()(nodes)
     model = tf.keras.Model(inputs=input_layer, outputs=output_concat)
     return model    
