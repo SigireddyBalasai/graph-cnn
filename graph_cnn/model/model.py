@@ -93,13 +93,13 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     req_shape = min(node_s, key=lambda x: x.shape[-1]).shape[-1]
     print(req_shape)
     for node in range(len(node_s)):
-            if node_s[node].shape[-1] != req_shape:
-                nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(node_s[node])
-                nodes_ = tf.keras.layers.BatchNormalization()(nodes_)
-                nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
-                nodes[node] = tf.keras.layers.Dropout(0.8)(nodes_)
-                
-    output_concat = tf.keras.layers.Concatenate()(node_s)
+        if node_s[node].shape[-1] != req_shape:
+            nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(node_s[node])
+            nodes_ = tf.keras.layers.BatchNormalization()(nodes_)
+            nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
+            nodes[node] = tf.keras.layers.Dropout(0.8)(nodes_)
+    
+    output_concat = tf.keras.layers.Add()(node_s)
     output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3))(output_concat)
     output_concat = tf.keras.layers.MaxPooling2D()(output_concat)
     output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3))(output_concat)
