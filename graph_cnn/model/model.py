@@ -4,13 +4,32 @@ import networkx as nx
 import random
 from matplotlib import pyplot as plt
 from graph_cnn.graph.generate import create_final_graph
+import tensorflow as tf
 
 def set_seed(seed):
     np.random.seed(seed)
     tf.random.set_seed(seed)
     random.seed(seed)
 
-def create_model(graph, input_shape=(224, 224, 3)):
+class AuxLayer(tf.keras.layers.Layer):
+    def __init__(self, num_classes,trainable=True):
+        super(AuxLayer, self).__init__()
+        self.num_classes = num_classes
+        self.conv1 = tf.keras.layers.Conv2D(32,(3,3))
+        self.pool1 = tf.keras.layers.MaxPooling2D()
+        self.conv2 = tf.keras.layers.Conv2D(32,(3,3))
+        self.flatten = tf.keras.layers.Flatten()
+        self.dense = tf.keras.layers.Dense(num_classes, activation='softmax')
+
+    def call(self, inputs):
+        inputs = self.conv1(inputs)
+        inputs = self.pool1(inputs)
+        inputs = self.conv2(inputs)
+        inputs = self.pool1(inputs)
+        inputs = self.flatten(inputs)
+        return self.dense(inputs)
+
+def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     nodes = {}
     input_layer = tf.keras.layers.Input(shape=input_shape)
 
@@ -61,12 +80,13 @@ def create_model(graph, input_shape=(224, 224, 3)):
     print(req_shape)
     for node in range(len(nodes)):
             if nodes[node].shape[-1] != req_shape:
-                nodes[node] = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(nodes[node])
-                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
-                nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
-                nodes[node] = tf.keras.layers.Dropout(0.8)(nodes[node])
+                nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(nodes[node])
+                nodes_ = tf.keras.layers.BatchNormalization()(nodes_)
+                nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
+                nodes[node] = tf.keras.layers.Dropout(0.8)(nodes_)
     output_concat = tf.keras.layers.Concatenate()(nodes)
-    model = tf.keras.Model(inputs=input_layer, outputs=output_concat)
+    aux_layers = [AuxLayer(num_classes=num_classes)(node) for node in nodes if random.uniform(0,1) > 0.5]
+    model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,aux_layers])
     return model    
 
 
