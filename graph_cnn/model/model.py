@@ -75,24 +75,25 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
         if graph.nodes[node]['state'] == "Convolution" or graph.nodes[node]['state'] == "MaxPooling" or graph.nodes[node]['state'] == "AveragePooling":
             dropout_prob = random.uniform(0.7, 1)
             nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
-    nodes = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
-    req_shape = min(nodes, key=lambda x: x.shape[-1]).shape[-1]
+    node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
+    req_shape = min(node_s, key=lambda x: x.shape[-1]).shape[-1]
     print(req_shape)
-    for node in range(len(nodes)):
-            if nodes[node].shape[-1] != req_shape:
-                nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(nodes[node])
+    for node in range(len(node_s)):
+            if node_s[node].shape[-1] != req_shape:
+                nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(node_s[node])
                 nodes_ = tf.keras.layers.BatchNormalization()(nodes_)
                 nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
                 nodes[node] = tf.keras.layers.Dropout(0.8)(nodes_)
                 
-    output_concat = tf.keras.layers.Concatenate()(nodes)
+    output_concat = tf.keras.layers.Concatenate()(node_s)
     output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3))(output_concat)
     output_concat = tf.keras.layers.MaxPooling2D()(output_concat)
     output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3))(output_concat)
     output_concat = tf.keras.layers.MaxPooling2D()(output_concat)
     output_concat = tf.keras.layers.Flatten()(output_concat)
     output_concat = tf.keras.layers.Dense(num_classes, activation='softmax')(output_concat)
-    aux_layers = [AuxLayer(num_classes=num_classes)(node) for node in nodes if random.uniform(0,1) > 0.1]
+    print(nodes)
+    aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])
     return model    
 
