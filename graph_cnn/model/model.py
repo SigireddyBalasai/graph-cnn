@@ -11,23 +11,35 @@ def set_seed(seed):
     tf.random.set_seed(seed)
     random.seed(seed)
 
+import tensorflow as tf
+
 class AuxLayer(tf.keras.layers.Layer):
-    def __init__(self, num_classes,trainable=True):
+    def __init__(self, num_classes, trainable=True):
         super(AuxLayer, self).__init__()
         self.num_classes = num_classes
-        self.conv1 = tf.keras.layers.Conv2D(32,(3,3))
-        self.pool1 = tf.keras.layers.MaxPooling2D()
-        self.conv2 = tf.keras.layers.Conv2D(32,(3,3))
-        self.flatten = tf.keras.layers.Flatten()
-        self.dense = tf.keras.layers.Dense(num_classes, activation='softmax')
+        self.layers_list = []
+
+    def build(self, input_shape):
+        current_shape = input_shape
+        while all(dim >= 5 for dim in current_shape[1:3]):
+            layer = tf.keras.layers.Conv2D(32, (3, 3), padding='same', activation='relu')
+            self.layers_list.append(layer)
+            current_shape = layer.compute_output_shape(current_shape)
+
+            layer = tf.keras.layers.MaxPooling2D()
+            self.layers_list.append(layer)
+            current_shape = layer.compute_output_shape(current_shape)
+
+        self.layers_list.append(tf.keras.layers.Flatten())
+        self.layers_list.append(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
+
+        super(AuxLayer, self).build(input_shape)
 
     def call(self, inputs):
-        inputs = self.conv1(inputs)
-        inputs = self.pool1(inputs)
-        inputs = self.conv2(inputs)
-        inputs = self.pool1(inputs)
-        inputs = self.flatten(inputs)
-        return self.dense(inputs)
+        for layer in self.layers_list:
+            inputs = layer(inputs)
+        return inputs
+
 
 def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     nodes = {}
