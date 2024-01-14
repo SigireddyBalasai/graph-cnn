@@ -66,8 +66,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
                 for predecessor in predecessors:
                     if nodes[predecessor].shape[-1] != req_shape:
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(1, 1))(nodes[predecessor])
-                        nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
                         nodes[predecessor] = tf.keras.layers.Dropout(0.8)(nodes[predecessor])
                 concat = tf.keras.layers.Add()([nodes[predecessor] for predecessor in predecessors])
             else:
@@ -75,17 +75,17 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             if graph.nodes[node]['state'] == "Convolution":
                 filters = concat.shape[-1] * 2
                 nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], padding='same')(concat)
-                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node]) 
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])  # Do Batch Normalization after Activation
                 nodes[node] = tf.keras.layers.Dropout(0.8)(nodes[node])
             elif graph.nodes[node]['state'] == "MaxPooling":
                 nodes[node] = tf.keras.layers.MaxPooling2D(pool_size=graph.nodes[node]['kernel_size'], strides=1, padding='same')(concat)
-                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node]) 
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])  # Do Batch Normalization after Activation
             elif graph.nodes[node]['state'] == "AveragePooling":
                 nodes[node] = tf.keras.layers.AveragePooling2D(pool_size=graph.nodes[node]['kernel_size'], strides=1, padding='same')(concat)
-                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])  # Add Batch Normalization
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])  # Do Batch Normalization after Activation
 
         if graph.nodes[node]['state'] == "Convolution" or graph.nodes[node]['state'] == "MaxPooling" or graph.nodes[node]['state'] == "AveragePooling":
             dropout_prob = random.uniform(0.7, 1)
@@ -96,8 +96,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     for node in range(len(node_s)):
         if node_s[node].shape[-1] != req_shape:
             nodes_ = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(1, 1))(node_s[node])
-            nodes_ = tf.keras.layers.BatchNormalization()(nodes_)
             nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
+            nodes_ = tf.keras.layers.BatchNormalization()(nodes_)  # Do Batch Normalization after Activation
             nodes[node] = tf.keras.layers.Dropout(0.8)(nodes_)
     
     output_concat = tf.keras.layers.Add()(node_s)
@@ -110,7 +110,6 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.5 and graph.in_degree(node) > 1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])
     return model 
-   
 
 
 if __name__ == '__main__':
