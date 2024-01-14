@@ -63,7 +63,7 @@ def assign_states(graph):
         activation = np.random.choice(["relu","sigmoid","tanh"])
         graph.nodes[node]['state'] = state
         if state == "Convolution":
-            graph.nodes[node]['kernel_size'] = (np.random.choice([1,3,5,7]),)*2
+            graph.nodes[node]['kernel_size'] = (np.random.choice([1,3,5]),)*2
             graph.nodes[node]['activation'] = activation
         elif state == "MaxPooling" or state == "AveragePooling":
             graph.nodes[node]['kernel_size'] = (np.random.choice([2,3,4]),)*2
