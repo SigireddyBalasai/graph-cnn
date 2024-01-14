@@ -38,6 +38,7 @@ class AuxLayer(tf.keras.layers.Layer):
         super(AuxLayer, self).build(input_shape)
 
     def call(self, inputs):
+        print(inputs)
         for layer in self.layers_list:
             inputs = layer(inputs)
         return inputs
@@ -106,10 +107,10 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     output_concat = tf.keras.layers.MaxPooling2D()(output_concat)
     output_concat = tf.keras.layers.Flatten()(output_concat)
     output_concat = tf.keras.layers.Dense(num_classes, activation='softmax')(output_concat)
-    print(nodes)
-    aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.1]
+    aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.5 and graph.in_degree(node) > 1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])
-    return model    
+    return model 
+   
 
 
 if __name__ == '__main__':
