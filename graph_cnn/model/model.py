@@ -27,6 +27,10 @@ class AuxLayer(tf.keras.layers.Layer):
 
             layer = tf.keras.layers.MaxPooling2D()
             self.layers_list.append(layer)
+            layer = tf.keras.layers.BatchNormalization()
+            self.layers_list.append(layer)
+            layer = tf.keras.layers.Dropout(0.3)
+            self.layers_list.append(layer)
             current_shape = layer.compute_output_shape(current_shape)
 
         self.layers_list.append(tf.keras.layers.Flatten())
@@ -93,7 +97,7 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     req_shape = mean(list(map(lambda x: x.shape[-1],node_s)))
-    req_dimension = mean(list(map(lambda x: x.shape[1],node_s)))
+    req_dimension = min(list(map(lambda x: x.shape[1],node_s)))
     for node in range(len(node_s)):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if node_s[node].shape[-1] != req_shape or node_s[node].shape[1] != req_dimension:
