@@ -58,7 +58,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
         else:
             if len(predecessors) > 1:
                 req_shape = mean(list(map(lambda x: nodes[x].shape[-1],predecessors)))
-                req_dimension = min(list(map(lambda x: nodes[x],predecessors)), key=lambda x: x.shape[1]).shape[1]
+                predessor_ = list(map(lambda x: nodes[x].shape,predecessors))
+                req_dimension = min(list(map(lambda x: x[1],predessor_)))
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if nodes[predecessor].shape[-1] != req_shape or nodes[predecessor].shape[1] != req_dimension:
