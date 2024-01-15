@@ -83,7 +83,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
                     nodes[node] = tf.keras.layers.AveragePooling2D(pool_size=graph.nodes[node]['kernel_size'], padding='valid')(concat)
                     nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
                     nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])  # Do Batch Normalization after Activation
-
+            else:
+                nodes[node] = concat
         if graph.nodes[node]['state'] == "Convolution" or graph.nodes[node]['state'] == "MaxPooling" or graph.nodes[node]['state'] == "AveragePooling":
             dropout_prob = random.uniform(0.7, 1)
             nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
@@ -99,12 +100,7 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             node_s[node] = tf.keras.layers.Dropout(0.8)(nodes_)
     
     output_concat = tf.keras.layers.Concatenate()(node_s)
-    output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3), padding='valid')(output_concat)
-    output_concat = tf.keras.layers.MaxPooling2D(padding='valid')(output_concat)
-    output_concat = tf.keras.layers.Conv2D(filters=input_shape[-1], kernel_size=(3, 3), padding='valid')(output_concat)
-    output_concat = tf.keras.layers.MaxPooling2D(padding='valid')(output_concat)
-    output_concat = tf.keras.layers.Flatten()(output_concat)
-    output_concat = tf.keras.layers.Dense(num_classes, activation='softmax')(output_concat)
+    optput_concat = AuxLayer(num_classes=num_classes)(output_concat)
     aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.5 and graph.in_degree(node) > 1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])
     return model 
