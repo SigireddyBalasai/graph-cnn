@@ -4,6 +4,7 @@ import networkx as nx
 import random
 from matplotlib import pyplot as plt
 from graph_cnn.graph.generate import create_final_graph
+from statistics import mean
 
 def set_seed(seed):
     np.random.seed(seed)
@@ -56,7 +57,7 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
         else:
             if len(predecessors) > 1:
-                req_shape = min(list(map(lambda x: nodes[x],predecessors)), key=lambda x: x.shape[-1]).shape[-1]
+                req_shape = mean(list(map(lambda x: nodes[x].shape[-1],predecessors)))
                 req_dimension = min(list(map(lambda x: nodes[x],predecessors)), key=lambda x: x.shape[1]).shape[1]
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
@@ -65,7 +66,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
                         nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
                         nodes[predecessor] = tf.keras.layers.Dropout(0.2)(nodes[predecessor])
-                concat = tf.keras.layers.Concatenate()([nodes[predecessor] for predecessor in predecessors])
+                concat = tf.keras.layers.Add()([nodes[predecessor] for predecessor in predecessors])
+                concat = tf.keras.layers.Conv2D(filters=concat.shape[-1]*2, kernel_size=(1,1), padding='valid')(concat)
             else:
                 concat = nodes[predecessors[0]]
             if concat.shape[1] - graph.nodes[node]['kernel_size'][0] + 1 > 5:
@@ -89,8 +91,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             dropout_prob = random.uniform(0.7, 1)
             nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
-    req_shape = min(node_s, key=lambda x: x.shape[-1]).shape[-1]
-    req_dimension = min(node_s,key=lambda x: x.shape[1]).shape[1]
+    req_shape = mean(list(map(lambda x: x.shape[-1],node_s)))
+    req_dimension = mean(list(map(lambda x: x.shape[1],node_s)))
     for node in range(len(node_s)):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if node_s[node].shape[-1] != req_shape or node_s[node].shape[1] != req_dimension:
@@ -99,7 +101,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             nodes_ = tf.keras.layers.BatchNormalization()(nodes_)  # Do Batch Normalization after Activation
             node_s[node] = tf.keras.layers.Dropout(0.2)(nodes_)
     
-    output_concat = tf.keras.layers.Concatenate()(node_s)
+    output_concat = tf.keras.layers.Add()(node_s)
+    output_concat = tf.keras.layers.Conv2D(filters=output_concat.shape[-1]*2, kernel_size=(1,1), padding='valid')(output_concat)
     output_concat = AuxLayer(num_classes=num_classes)(output_concat)
     aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.5 and graph.in_degree(node) > 1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])

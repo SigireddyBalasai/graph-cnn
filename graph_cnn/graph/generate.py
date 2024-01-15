@@ -4,6 +4,7 @@ import networkx as nx
 from matplotlib import pyplot as plt
 import random
 from networkx.algorithms.traversal.depth_first_search import dfs_tree
+from statistics import mean
 
 
 def create_random_graph(nodes:int,edges:int)->nx.DiGraph:
