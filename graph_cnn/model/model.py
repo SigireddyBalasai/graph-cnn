@@ -64,7 +64,7 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(kernel_size,kernel_size), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
-                        nodes[predecessor] = tf.keras.layers.Dropout(0.8)(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Dropout(0.2)(nodes[predecessor])
                 concat = tf.keras.layers.Concatenate()([nodes[predecessor] for predecessor in predecessors])
             else:
                 concat = nodes[predecessors[0]]
@@ -97,7 +97,7 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
             nodes_ = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(kernel_size,kernel_size), padding='valid')(node_s[node])
             nodes_ = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes_)
             nodes_ = tf.keras.layers.BatchNormalization()(nodes_)  # Do Batch Normalization after Activation
-            node_s[node] = tf.keras.layers.Dropout(0.8)(nodes_)
+            node_s[node] = tf.keras.layers.Dropout(0.2)(nodes_)
     
     output_concat = tf.keras.layers.Concatenate()(node_s)
     output_concat = AuxLayer(num_classes=num_classes)(output_concat)
