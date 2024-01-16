@@ -108,7 +108,8 @@ def create_model(graph, input_shape=(224, 224, 3),num_classes=100):
     
     output_concat = tf.keras.layers.Add()(node_s)
     output_concat = tf.keras.layers.Conv2D(filters=output_concat.shape[-1]*2, kernel_size=(1,1), padding='valid')(output_concat)
-    output_concat = AuxLayer(num_classes=num_classes)(output_concat)
+    output_concat = tf.keras.layers.Flatten()(output_concat)
+    output_concat = tf.keras.layers.Dense(num_classes, activation='softmax')(output_concat)
     aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0,1) > 0.5 and graph.in_degree(node) > 1]
     model = tf.keras.Model(inputs=input_layer, outputs=[output_concat,*aux_layers])
     return model 
