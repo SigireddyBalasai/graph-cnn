@@ -35,7 +35,7 @@ class AuxLayer(tf.keras.layers.Layer):
             self.layers_list.append(layer)
             current_shape = layer.compute_output_shape(current_shape)
 
-        self.layers_list.append(tf.keras.layers.Flatten())
+        self.layers_list.append(tf.keras.layers.GlobalAveragePooling2D())
         self.layers_list.append(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
 
         super(AuxLayer, self).build(input_shape)
