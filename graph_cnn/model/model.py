@@ -21,8 +21,6 @@ class AuxLayer(tf.keras.layers.Layer):
         current_shape = input_shape
         print(current_shape)
         self.layers_list.append(tf.keras.layers.GlobalAveragePooling2D())
-        self.layers_list.append(tf.keras.layers.Dense(units=1024, activation='relu'))
-        self.layers_list.append(tf.keras.layers.Dense(units=512, activation='relu'))
         self.layers_list.append(tf.keras.layers.Dense(units=self.num_classes, activation='softmax'))
     def call(self, inputs):
         for layer in self.layers_list:
