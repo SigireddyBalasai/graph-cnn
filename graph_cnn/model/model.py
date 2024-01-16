@@ -20,8 +20,8 @@ class AuxLayer(tf.keras.layers.Layer):
     def build(self, input_shape):
         current_shape = input_shape
         print(current_shape)
-        while current_shape[1] > 5:
-            kernels = current_shape[3]*2
+        while current_shape[-1] < self.num_classes * 5:
+            kernels = current_shape[-1]*2
             layer = tf.keras.layers.Conv2D(kernels, (3, 3), activation='relu')
             self.layers_list.append(layer)
             current_shape = layer.compute_output_shape(current_shape)
