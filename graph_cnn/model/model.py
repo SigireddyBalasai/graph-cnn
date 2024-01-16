@@ -27,6 +27,7 @@ class AuxLayer(tf.keras.layers.Layer):
             current_shape = layer.compute_output_shape(current_shape)
 
             layer = tf.keras.layers.MaxPooling2D()
+            current_shape = layer.compute_output_shape(current_shape)
             self.layers_list.append(layer)
             layer = tf.keras.layers.BatchNormalization()
             self.layers_list.append(layer)
