@@ -20,26 +20,10 @@ class AuxLayer(tf.keras.layers.Layer):
     def build(self, input_shape):
         current_shape = input_shape
         print(current_shape)
-        while current_shape[-1] < self.num_classes * 5:
-            kernels = current_shape[-1]*2
-            layer = tf.keras.layers.Conv2D(kernels, (3, 3), activation='relu')
-            self.layers_list.append(layer)
-            current_shape = layer.compute_output_shape(current_shape)
-
-            layer = tf.keras.layers.MaxPooling2D()
-            current_shape = layer.compute_output_shape(current_shape)
-            self.layers_list.append(layer)
-            layer = tf.keras.layers.BatchNormalization()
-            self.layers_list.append(layer)
-            layer = tf.keras.layers.Dropout(0.3)
-            self.layers_list.append(layer)
-            current_shape = layer.compute_output_shape(current_shape)
-
         self.layers_list.append(tf.keras.layers.GlobalAveragePooling2D())
-        self.layers_list.append(tf.keras.layers.Dense(self.num_classes, activation='softmax'))
-
-        super(AuxLayer, self).build(input_shape)
-
+        self.layers_list.append(tf.keras.layers.Dense(units=1024, activation='relu'))
+        self.layers_list.append(tf.keras.layers.Dense(units=512, activation='relu'))
+        self.layers_list.append(tf.keras.layers.Dense(units=self.num_classes, activation='softmax'))
     def call(self, inputs):
         for layer in self.layers_list:
             inputs = layer(inputs)
