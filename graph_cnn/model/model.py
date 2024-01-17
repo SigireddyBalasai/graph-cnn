@@ -28,7 +28,7 @@ class AuxLayer(tf.keras.layers.Layer):
         return inputs
 
 
-def create_model(graph, input_shape=(224, 224, 3), num_classes=100):
+def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=True):
     nodes = {}
     input_layer = tf.keras.layers.Input(shape=input_shape)
     for node in graph.nodes():
@@ -40,8 +40,12 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100):
             nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
         else:
             if len(predecessors) > 1:
-                req_shape = min([nodes[x].shape[-1] for x in predecessors])
-                req_dimension = min([nodes[x].shape[1] for x in predecessors])
+                if use_mean:
+                    req_shape = mean([nodes[x].shape[-1] for x in predecessors])
+                    req_dimension = mean([nodes[x].shape[1] for x in predecessors])
+                else:
+                    req_shape = min([nodes[x].shape[-1] for x in predecessors])
+                    req_dimension = min([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if nodes[predecessor].shape[-1] != req_shape or nodes[predecessor].shape[1] != req_dimension:
@@ -67,8 +71,12 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100):
         dropout_prob = random.uniform(0.7, 1)
         nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
-    req_shape = mean([x.shape[-1] for x in node_s])
-    req_dimension = min([x.shape[1] for x in node_s])
+    if use_mean:
+        req_shape = mean([x.shape[-1] for x in node_s])
+        req_dimension = mean([x.shape[1] for x in node_s])
+    else:
+        req_shape = min([x.shape[-1] for x in node_s])
+        req_dimension = min([x.shape[1] for x in node_s])
     for node in range(len(node_s)):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if node_s[node].shape[-1] != req_shape or node_s[node].shape[1] != req_dimension:
