@@ -60,15 +60,10 @@ def mutate(graph):
 
 def assign_states(graph):
     for node in graph.nodes():
-        state = np.random.choice(["MaxPooling","AveragePooling","Convolution"],p=[0.3,0.3,0.4])
         activation = np.random.choice(["relu","sigmoid","tanh"])
-        graph.nodes[node]['state'] = state
-        if state == "Convolution":
-            graph.nodes[node]['kernel_size'] = (np.random.choice([1,3,5]),)*2
-            graph.nodes[node]['activation'] = activation
-        elif state == "MaxPooling" or state == "AveragePooling":
-            graph.nodes[node]['kernel_size'] = (np.random.choice([2,3,4]),)*2
-            graph.nodes[node]['activation'] = activation
+        graph.nodes[node]['activation'] = activation
+        kernel_size = (np.random.choice([1, 3, 5, 7]),) * 2
+        graph.nodes[node]['kernel_size'] = kernel_size
             
     return graph
 
