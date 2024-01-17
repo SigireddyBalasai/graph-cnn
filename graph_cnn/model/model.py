@@ -36,7 +36,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
         if not predecessors:
             filters = 32
             nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], activation=graph.nodes[node]['activation'], padding='valid')(input_layer)
-            nodes[node] = tf.keras.layers.MaxPooling2D(pool_size=graph.nodes[node]['kernel_size'], padding='valid')(nodes[node])
+            nodes[node] = tf.keras.layers.MaxPooling2D()(nodes[node])
             nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
         else:
             if len(predecessors) > 1:
@@ -62,7 +62,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                     nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
                     nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
                     nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 1))(nodes[node])
-                    nodes[node] = tf.keras.layers.MaxPooling2D(pool_size=graph.nodes[node]['kernel_size'], padding='valid')(concat)
+                    nodes[node] = tf.keras.layers.MaxPooling2D()(concat)
                     nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
                     nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
             else:
