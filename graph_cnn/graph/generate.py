@@ -62,7 +62,7 @@ def assign_states(graph):
     for node in graph.nodes():
         activation = np.random.choice(["relu","sigmoid","tanh"])
         graph.nodes[node]['activation'] = activation
-        kernel_size = (np.random.choice([1, 3, 5, 7]),) * 2
+        kernel_size = (np.random.choice([1, 3, 5]),) * 2
         graph.nodes[node]['kernel_size'] = kernel_size
             
     return graph
