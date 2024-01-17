@@ -42,10 +42,9 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
             if len(predecessors) > 1:
                 if use_mean:
                     req_shape = mean([nodes[x].shape[-1] for x in predecessors])
-                    req_dimension = mean([nodes[x].shape[1] for x in predecessors])
                 else:
                     req_shape = min([nodes[x].shape[-1] for x in predecessors])
-                    req_dimension = min([nodes[x].shape[1] for x in predecessors])
+                req_dimension = min([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if nodes[predecessor].shape[-1] != req_shape or nodes[predecessor].shape[1] != req_dimension:
