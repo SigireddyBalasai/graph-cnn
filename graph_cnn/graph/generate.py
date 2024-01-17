@@ -60,7 +60,7 @@ def mutate(graph):
 
 def assign_states(graph):
     for node in graph.nodes():
-        state = np.random.choice(["MaxPooling","AveragePooling","Convolution"],p=[0.05,0.05,0.9])
+        state = np.random.choice(["MaxPooling","AveragePooling","Convolution"],p=[0.3,0.3,0.4])
         activation = np.random.choice(["relu","sigmoid","tanh"])
         graph.nodes[node]['state'] = state
         if state == "Convolution":
