@@ -89,7 +89,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
     output_concat = tf.keras.layers.Add()(node_s)
     output_concat = AuxLayer(num_classes=num_classes)(output_concat)
     if include_aux == True:
-        aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0, 1) > 0.5 and graph.in_degree(node) > 1]
+        aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if random.uniform(0, 3) > 0.5 and graph.in_degree(node) > 1]
         model = tf.keras.Model(inputs=input_layer, outputs=[output_concat, *aux_layers])
     else:
         model = tf.keras.Model(inputs=input_layer,outputs=output_concat)
