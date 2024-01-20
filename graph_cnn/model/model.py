@@ -48,18 +48,20 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if nodes[predecessor].shape[-1] != req_shape or nodes[predecessor].shape[1] != req_dimension:
-                        nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(kernel_size, kernel_size), padding='valid')(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(kernel_size, 1), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(1, kernel_size), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
                         nodes[predecessor] = tf.keras.layers.Dropout(0.2)(nodes[predecessor])
                 concat = tf.keras.layers.Add()([nodes[predecessor] for predecessor in predecessors])
-                concat = tf.keras.layers.Conv2D(filters=concat.shape[-1]*2, kernel_size=(1, 1), padding='valid')(concat)
+                concat = tf.keras.layers.Conv2D(filters=int(concat.shape[-1]* random.uniform(1,3)) , kernel_size=(1, 1), padding='valid')(concat)
             else:
                 concat = nodes[predecessors[0]]
             if concat.shape[1] - graph.nodes[node]['kernel_size'][0] + 1 > 5:
-                    filters = concat.shape[-1] * 2
-                    nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], padding='valid')(concat)
+                    filters = concat.shape[-1] * random.uniform(1,3)
+                    nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(graph.nodes[node]['kernel_size'][0],1), padding='valid')(concat)
                     nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                    nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1,graph.nodes[node]['kernel_size'][0]), padding='valid')(concat)
                     nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
                     nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 1))(nodes[node])
                     nodes[node] = tf.keras.layers.MaxPooling2D()(concat)
