@@ -40,11 +40,13 @@ def mutate(graph):
         if node_type == 'Convolution':
             kernel_size = (np.random.choice([1, 3, 5, 7]),) * 2
             activation = np.random.choice(["elu", "leaky_relu", "tanh"])
+            activation = 'relu'
             graph.nodes[len(graph.nodes()) - 1]['kernel_size'] = kernel_size
             graph.nodes[len(graph.nodes()) - 1]['activation'] = activation
         elif node_type == "MaxPooling" or node_type == "AveragePooling":
             kernel_size = (np.random.choice([2, 3, 4]),) * 2
             activation = np.random.choice(["elu", "leaky_relu", "tanh"])
+            activation = 'relu'
             graph.nodes[len(graph.nodes()) - 1]['kernel_size'] = kernel_size
             graph.nodes[len(graph.nodes()) - 1]['activation'] = activation
     elif choice == "remove_node":
@@ -61,6 +63,7 @@ def mutate(graph):
 def assign_states(graph):
     for node in graph.nodes():
         activation = np.random.choice(["relu","sigmoid","tanh"])
+        activation = 'relu'
         graph.nodes[node]['activation'] = activation
         kernel_size = (np.random.choice([1, 3, 5]),) * 2
         graph.nodes[node]['kernel_size'] = kernel_size
