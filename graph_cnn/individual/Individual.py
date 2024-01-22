@@ -39,12 +39,12 @@ class Individual:
 
     def mutate(self):
         self.graph = mutate_dag(self.graph)
-        self.model = create_model(self.normalized, self.input_size, self.output_size)
+        self.model = create_model(self.graph, self.input_size, self.output_size)
         return self
 
     def crossover(self, other):
         self.graph = crossover(self.graph, other.graph)
-        self.model = create_model(self.normalized, self.input_size, self.output_size)
+        self.model = create_model(self.graph, self.input_size, self.output_size)
         return self
 
     def get_model(self):
