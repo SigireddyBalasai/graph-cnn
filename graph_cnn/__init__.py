@@ -1,1 +1,1 @@
-__all__ = ['graph','model']
+__all__ = ['graph','model','individual']
