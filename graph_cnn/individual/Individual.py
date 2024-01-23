@@ -27,7 +27,9 @@ class Individual:
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
         self.model.compile(optimizer=optimizer, loss=loss, metrics=tf.keras.metrics.CategoricalAccuracy())
         for i in train_ds:
-            loss, accuracy = self.model.evaluate(i[0], i[1], verbose=0)
+            ans = self.model.evaluate(i[0], i[1], verbose=0)
+            print(ans)
+            accuracy=ans[1]
             accuracies.append(accuracy)
 
         accuracies = np.array(accuracies)
