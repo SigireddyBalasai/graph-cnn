@@ -4,10 +4,9 @@ import os
 import tensorflow as tf
 
 class Generation:
-    def __init__(self, input_size, output_size, states, nodes, edges, population, limit, train_ds, test_ds,loss,optimizer,metrics,callbacks):
+    def __init__(self, input_size, output_size, nodes, edges, population, limit, train_ds, test_ds,loss,optimizer,metrics,callbacks):
         self.input_size = input_size
         self.output_size = output_size
-        self.states = states
         self.nodes = nodes
         self.edges = edges
         self.population = population
@@ -22,7 +21,7 @@ class Generation:
         self.create_population()
 
     def create_population(self):
-        self.population = [Individual(self.input_size, self.output_size, self.states, self.nodes, self.edges) for _ in range(self.population)]
+        self.population = [Individual(self.input_size, self.output_size, self.nodes, self.edges) for _ in range(self.population)]
     
     def score_population(self):
         population = self.population
