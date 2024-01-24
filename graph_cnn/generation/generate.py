@@ -71,7 +71,7 @@ class Generation:
             model = self.population[0].get_model()
             model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
             model.summary()
-            model.fit(self.train_ds, epochs=100, validation_data=self.test_ds,callbacks=self.callbacks)
+            model.fit(self.train_ds, epochs=15, validation_data=self.test_ds,callbacks=self.callbacks)
             print('---------------------------------------------------')
             for individual in self.population:
                 print("individual score: ", individual.get_score())
