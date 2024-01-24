@@ -44,7 +44,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                 if use_mean:
                     req_shape = mean([nodes[x].shape[-1] for x in predecessors])
                 else:
-                    req_shape = min([nodes[x].shape[-1] for x in predecessors])
+                    req_shape = max([nodes[x].shape[-1] for x in predecessors])
                 req_dimension = min([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors:
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
@@ -72,11 +72,11 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                     nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
             else:
                 nodes[node] = concat
-        dropout_prob = random.uniform(0.7, 1)
+        dropout_prob = random.uniform(0.2, 1)
         nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     if use_mean:
-        req_shape = mean([x.shape[-1] for x in node_s])
+        req_shape = max([x.shape[-1] for x in node_s])
         req_dimension = mean([x.shape[1] for x in node_s])
     else:
         req_shape = min([x.shape[-1] for x in node_s])
