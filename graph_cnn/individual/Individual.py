@@ -29,7 +29,7 @@ class Individual:
         for i in train_ds:
             ans = self.model.evaluate(i[0], i[1], verbose=0)
             print(ans)
-            accuracy=ans[1]
+            accuracy=ans[-1]
             accuracies.append(accuracy)
 
         accuracies = np.array(accuracies)
