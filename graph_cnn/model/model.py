@@ -60,16 +60,16 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
             else:
                 concat = nodes[predecessors[0]]
             if concat.shape[1] - graph.nodes[node]['kernel_size'][0] + 1 > 5:
-                    filters = concat.shape[-1] * random.uniform(1,3)
-                    nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(graph.nodes[node]['kernel_size'][0],1), padding='valid')(concat)
-                    nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
-                    nodes[node] = tf.keras.layers.Dropout(random.uniform(0,1))(nodes[node])
-                    nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1,graph.nodes[node]['kernel_size'][0]), padding='valid')(concat)
-                    nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
-                    nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 1))(nodes[node])
-                    nodes[node] = tf.keras.layers.MaxPooling2D()(concat)
-                    nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
-                    nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
+                filters = concat.shape[-1] * random.uniform(1,3)
+                nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(graph.nodes[node]['kernel_size'][0],1), padding='valid')(concat)
+                nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(random.uniform(0,1))(nodes[node])
+                nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1,graph.nodes[node]['kernel_size'][0]), padding='valid')(concat)
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 1))(nodes[node])
+                nodes[node] = tf.keras.layers.MaxPooling2D()(concat)
+                nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
+                nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
             else:
                 nodes[node] = concat
         dropout_prob = random.uniform(0.2, 1)
