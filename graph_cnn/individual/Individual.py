@@ -25,8 +25,8 @@ class Individual:
     def evaluate(self, train_ds):
         num_processes = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=num_processes)
-
-        results = pool.map(self.evaluate_single, train_ds)
+        train_ds = list(train_ds.as_numpy_iterator())
+        results = pool.map(self.evaluate_single, train_ds, chunksize=1)
         accuracies = [result[-1] for result in results]
 
         accuracies = np.array(accuracies)
