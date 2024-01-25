@@ -22,10 +22,11 @@ class Individual:
     def create_random_graph(self):
         return create_final_graph(self.nodes, self.edges)
 
-    def evaluate(self, train_ds):
+    def evaluate(self, test_ds):
         num_processes = multiprocessing.cpu_count()
         pool = multiprocessing.Pool(processes=num_processes)
-        train_ds = list(train_ds.as_numpy_iterator())
+        train_ds = list(test_ds.as_numpy_iterator())
+        print("evaluating")
         results = pool.map(self.evaluate_single, train_ds, chunksize=1)
         accuracies = [result[-1] for result in results]
 
