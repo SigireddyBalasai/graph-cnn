@@ -26,7 +26,7 @@ class Generation:
     def score_population(self):
         population = self.population
         for individual in population:
-            individual.evaluate(train_ds=self.test_ds)
+            individual.evaluate(test_ds=self.test_ds)
             print("individual score: ", individual.get_score())
         population.sort(key=lambda x: x.get_score(), reverse=True)
         self.population = population
