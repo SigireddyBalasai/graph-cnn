@@ -51,7 +51,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                     if nodes[predecessor].shape[-1] != req_shape or nodes[predecessor].shape[1] != req_dimension:
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(kernel_size, 1), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.Activation(graph.nodes[predecessor]['activation'])(nodes[predecessor])
-                        nodes[predecessor] = tf.keras.layers.Dropout(random.uniform(0,1))(nodes[predecessor])
+                        nodes[predecessor] = tf.keras.layers.Dropout(random.uniform(0,0.9))(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(1, kernel_size), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
                         nodes[predecessor] = tf.keras.layers.Dropout(0.2)(nodes[predecessor])
@@ -63,10 +63,10 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                 filters = concat.shape[-1] * random.uniform(1,3)
                 nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(graph.nodes[node]['kernel_size'][0],1), padding='valid')(concat)
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
-                nodes[node] = tf.keras.layers.Dropout(random.uniform(0,1))(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(random.uniform(0,0.9))(nodes[node])
                 nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=(1,graph.nodes[node]['kernel_size'][0]), padding='valid')(concat)
                 nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
-                nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 1))(nodes[node])
+                nodes[node] = tf.keras.layers.Dropout(random.uniform(0, 0.9))(nodes[node])
                 nodes[node] = tf.keras.layers.MaxPooling2D()(concat)
                 nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
                 nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
