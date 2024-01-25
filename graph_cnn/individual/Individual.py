@@ -2,11 +2,12 @@ import networkx as nx
 import tensorflow as tf
 from matplotlib import pyplot as plt
 import numpy as np
-from graph_cnn.graph.generate import create_final_graph,create_random_graph,assign_states
+from graph_cnn.graph.generate import create_final_graph, create_random_graph, assign_states
 from graph_cnn.graph.generate import cross_over as crossover
 from graph_cnn.graph.generate import mutate as mutate_dag
 from graph_cnn.model import create_model
-import multiprocessing
+import threading
+import threading
 
 
 class Individual:
@@ -23,13 +24,24 @@ class Individual:
         return create_final_graph(self.nodes, self.edges)
 
     def evaluate(self, test_ds):
-        num_processes = multiprocessing.cpu_count()
-        pool = multiprocessing.Pool(processes=num_processes)
         train_ds = list(test_ds.as_numpy_iterator())
         print("evaluating")
-        results = pool.map(self.evaluate_single, train_ds, chunksize=1)
-        accuracies = [result[-1] for result in results]
+        results = []
+        threads = []
 
+        def evaluate_single_thread(data):
+            result = self.evaluate_single(data)
+            results.append(result)
+
+        for data in train_ds:
+            thread = threading.Thread(target=evaluate_single_thread, args=(data,))
+            thread.start()
+            threads.append(thread)
+
+        for thread in threads:
+            thread.join()
+
+        accuracies = [result[-1] for result in results]
         accuracies = np.array(accuracies)
         mean_accuracy = np.mean(accuracies)
         std_accuracy = np.std(accuracies)
@@ -43,7 +55,6 @@ class Individual:
         self.model.compile(optimizer=optimizer, loss=loss, metrics=tf.keras.metrics.CategoricalAccuracy())
         ans = self.model.evaluate(data[0], data[1], verbose=0)
         return ans
-
 
     def mutate(self):
         self.graph = mutate_dag(self.graph)
