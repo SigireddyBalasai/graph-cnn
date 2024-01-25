@@ -6,6 +6,7 @@ from graph_cnn.graph.generate import create_final_graph,create_random_graph,assi
 from graph_cnn.graph.generate import cross_over as crossover
 from graph_cnn.graph.generate import mutate as mutate_dag
 from graph_cnn.model import create_model
+import multiprocessing
 
 
 class Individual:
@@ -22,14 +23,11 @@ class Individual:
         return create_final_graph(self.nodes, self.edges)
 
     def evaluate(self, train_ds):
-        accuracies = []
-        loss = tf.keras.losses.CategoricalCrossentropy()
-        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
-        self.model.compile(optimizer=optimizer, loss=loss, metrics=tf.keras.metrics.CategoricalAccuracy())
-        for i in train_ds:
-            ans = self.model.evaluate(i[0], i[1], verbose=0)
-            accuracy=ans[-1]
-            accuracies.append(accuracy)
+        num_processes = multiprocessing.cpu_count()
+        pool = multiprocessing.Pool(processes=num_processes)
+
+        results = pool.map(self.evaluate_single, train_ds)
+        accuracies = [result[-1] for result in results]
 
         accuracies = np.array(accuracies)
         mean_accuracy = np.mean(accuracies)
@@ -37,6 +35,14 @@ class Individual:
 
         score = mean_accuracy / std_accuracy
         self.score = score
+
+    def evaluate_single(self, data):
+        loss = tf.keras.losses.CategoricalCrossentropy()
+        optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+        self.model.compile(optimizer=optimizer, loss=loss, metrics=tf.keras.metrics.CategoricalAccuracy())
+        ans = self.model.evaluate(data[0], data[1], verbose=0)
+        return ans
+
 
     def mutate(self):
         self.graph = mutate_dag(self.graph)
