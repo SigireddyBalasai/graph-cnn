@@ -38,7 +38,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
             filters = 32
             lc = tf.keras.layers.LocallyConnected2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], activation=graph.nodes[node]['activation'], padding='valid')(input_layer)
             nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], activation=graph.nodes[node]['activation'], padding='valid')(input_layer)
-            nodes[node]= tf.keras.layers.Add()([nodes[node], lc])
+            nodes[node]= tf.keras.layers.Concatenate()([nodes[node], lc])
             nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
             nodes[node] = tf.keras.layers.MaxPooling2D()(nodes[node])
             nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
@@ -58,7 +58,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
                         nodes[predecessor] = tf.keras.layers.Conv2D(filters=req_shape, kernel_size=(1, kernel_size), padding='valid')(nodes[predecessor])
                         nodes[predecessor] = tf.keras.layers.BatchNormalization()(nodes[predecessor])  # Do Batch Normalization after Activation
                         nodes[predecessor] = tf.keras.layers.Dropout(0.2)(nodes[predecessor])
-                concat = tf.keras.layers.Add()([nodes[predecessor] for predecessor in predecessors])
+                concat = tf.keras.layers.Concatenate()([nodes[predecessor] for predecessor in predecessors])
                 concat = tf.keras.layers.Conv2D(filters=int(concat.shape[-1]* random.uniform(1,3)) , kernel_size=(1, 1), padding='valid')(concat)
             else:
                 concat = nodes[predecessors[0]]
@@ -92,7 +92,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
             nodes_ = tf.keras.layers.BatchNormalization()(nodes_)  # Do Batch Normalization after Activation
             node_s[node] = tf.keras.layers.Dropout(0.2)(nodes_)
 
-    output_concat = tf.keras.layers.Add()(node_s)
+    output_concat = tf.keras.layers.Concatenate()(node_s)
     output_concat = AuxLayer(num_classes=num_classes)(output_concat)
     if include_aux == True:
         aux_layers = [AuxLayer(num_classes=num_classes)(nodes[node]) for node in nodes if graph.out_degree(node) == 0]
