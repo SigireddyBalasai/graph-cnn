@@ -36,7 +36,10 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
         predecessors = list(graph.predecessors(node))
         if not predecessors:
             filters = 32
+            lc = tf.keras.layers.LocallyConnected2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], activation=graph.nodes[node]['activation'], padding='valid')(input_layer)
             nodes[node] = tf.keras.layers.Conv2D(filters=filters, kernel_size=graph.nodes[node]['kernel_size'], activation=graph.nodes[node]['activation'], padding='valid')(input_layer)
+            nodes[node]= tf.keras.layers.Add()([nodes[node], lc])
+            nodes[node] = tf.keras.layers.BatchNormalization()(nodes[node])
             nodes[node] = tf.keras.layers.MaxPooling2D()(nodes[node])
             nodes[node] = tf.keras.layers.Activation(graph.nodes[node]['activation'])(nodes[node])
         else:
