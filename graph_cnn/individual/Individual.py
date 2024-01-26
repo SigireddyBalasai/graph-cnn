@@ -24,7 +24,7 @@ class Individual:
         return create_final_graph(self.nodes, self.edges)
 
     def evaluate(self, test_ds):
-        train_ds = list(test_ds.as_numpy_iterator())
+        train_ds = list(test_ds)
         print("evaluating")
         results = []
         threads = []
