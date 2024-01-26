@@ -35,7 +35,7 @@ def cross_over(graph1,graph2):
 def mutate(graph):
     choice = np.random.choice(["add_node","remove_node","add_edge","remove_edge"])
     if choice == "add_node":
-        node_type = np.random.choice(["Convolution","MaxPooling","AveragePooling"])
+        node_type = np.random.choice(["Convolution","MaxPooling","AveragePooling",'LocallyConnected2D','Activation'])
         graph.add_node(len(graph.nodes()), state=node_type)
         if node_type == 'Convolution':
             kernel_size = (np.random.choice([1, 3, 5, 7]),) * 2
