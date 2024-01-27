@@ -79,7 +79,7 @@ def create_model(graph, input_shape=(224, 224, 3), num_classes=100, use_mean=Tru
         nodes[node] = tf.keras.layers.Dropout(dropout_prob)(nodes[node])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     if use_mean:
-        req_shape = max([x.shape[-1] for x in node_s])
+        req_shape = min([x.shape[-1] for x in node_s])
         req_dimension = mean([x.shape[1] for x in node_s])
     else:
         req_shape = min([x.shape[-1] for x in node_s])
