@@ -20,6 +20,13 @@ class AuxLayer(tf.keras.layers.Layer):
     def build(self, input_shape):
         current_shape = input_shape
         print(current_shape)
+        while current_shape[0] >= 3:
+            self.layers_list.append(tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), padding='valid'))
+            self.layers_list.append(tf.keras.layers.BatchNormalization())
+            self.layers_list.append(tf.keras.layers.Activation('relu'))
+            self.layers_list.append(tf.keras.layers.MaxPooling2D())
+            current_shape = self.layers_list[-1].compute_output_shape(current_shape)
+            print(current_shape)
         self.layers_list.append(tf.keras.layers.Flatten())
         self.layers_list.append(tf.keras.layers.Dropout(0.2))
         self.layers_list.append(tf.keras.layers.Dense(units=self.num_classes, activation='softmax'))
