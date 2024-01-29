@@ -119,7 +119,7 @@ def create_model(
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if (
                         nodes[predecessor].shape[-1] != req_shape
-                        or nodes[predecessor].shape[1] != req_dimension
+                        or nodes[predecessor].shape[1] != req_dimension or kernel_size <= 0
                     ):
                         node = graph.nodes[predecessor]
                         node["filters"] = req_shape
@@ -150,7 +150,7 @@ def create_model(
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if (
             node_s[node].shape[-1] != req_shape
-            or node_s[node].shape[1] != req_dimension
+            or node_s[node].shape[1] != req_dimension or kernel_size <= 0
         ):
             nodet = graph.nodes[node]
             nodet["filters"] = req_shape
