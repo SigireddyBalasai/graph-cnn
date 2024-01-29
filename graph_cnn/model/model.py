@@ -94,7 +94,9 @@ def create_model(
                 activation=graph.nodes[node_]["activation"],
                 padding="valid",
             )(input_layer)
-            current = load_layer(graph.nodes[node_])(input_layer)
+            node_d = graph.nodes[node_]
+            node_d["filters"] = filters
+            current = load_layer(node_d)(input_layer)
             add = keras.layers.Concatenate()([conv1, current])
             normalized = keras.layers.BatchNormalization()(add)
             pool = keras.layers.MaxPooling2D()(normalized)
@@ -104,7 +106,7 @@ def create_model(
         else:
             if len(predecessors) > 1:
                 if use_mean:
-                    req_shape = mean([nodes[x].shape[-1] for x in predecessors])
+                    req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))
                 else:
                     req_shape = max([nodes[x].shape[-1] for x in predecessors])
                 req_dimension = min([nodes[x].shape[1] for x in predecessors])
@@ -122,8 +124,7 @@ def create_model(
                         activation = keras.layers.Activation(
                             node["activation"]
                         )(normalized)
-                        add = keras.layers.Concatenate()([activation, nodes[predecessor]])
-                        nodes[predecessor] = add
+                        nodes[predecessor] = activation
                 concat = keras.layers.Concatenate()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
@@ -132,45 +133,48 @@ def create_model(
         dropout_prob = random.uniform(0.2, 1)
         nodes[node_] = keras.layers.Dropout(dropout_prob)(nodes[node_])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
+    print(node_s)
     if use_mean:
-        req_shape = min([x.shape[-1] for x in node_s])
-        req_dimension = mean([x.shape[1] for x in node_s])
+        req_shape = mean([x.shape[-1] for x in node_s])
+        req_dimension = min([x.shape[1] for x in node_s])
     else:
         req_shape = min([x.shape[-1] for x in node_s])
         req_dimension = min([x.shape[1] for x in node_s])
+    print(req_shape, req_dimension)
     for node, _ in enumerate(node_s):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if (
             node_s[node].shape[-1] != req_shape
             or node_s[node].shape[1] != req_dimension
         ):
-            node = {
-                "layer_type": graph.nodes[node],
-                "filters": req_shape,
-                "kernel_size": (kernel_size, kernel_size),
-            }
-            layer = load_layer(node)(node_s[node])
+            nodet = graph.nodes[node]
+            nodet["filters"] = req_shape
+            nodet["kernel_size"] = (kernel_size, kernel_size)
+            print(kernel_size)
+            layer = load_layer(nodet)(node_s[node])
             normalized = keras.layers.BatchNormalization()(layer)
             activation = keras.layers.Activation(graph.nodes[node]["activation"])(
                 normalized
             )
+            node_s[node] = activation
+            print(node_s)
             add = keras.layers.Add()([activation, node_s[node]])
-            node_s[node_] = add
-    print('final_layer_built')
+            nodes[node_] = add
     if include_aux:
-        aux = aux_layer(node_s[-1], num_classes)
+        last_node = list(nodes.keys())[-1]
+        aux = aux_layer(nodes[last_node], num_classes)
         model = keras.models.Model(inputs=input_layer, outputs=aux)
     else:
-        model = keras.models.Model(inputs=input_layer, outputs=node_s[-1])
+        model = keras.models.Model(inputs=input_layer, outputs=nodes[-1])
     return model
 
 
 if __name__ == "__main__":
     set_seed(42)
-    graph = create_final_graph(7, 0.4)
+    graph = create_final_graph(7, 0.1)
     nx.draw(graph, with_labels=True)
     plt.show()
-    model = create_model(graph)
+    model = create_model(graph, use_mean=True, include_aux=True)
     tf.keras.utils.plot_model(
         model,
         to_file="model.png",

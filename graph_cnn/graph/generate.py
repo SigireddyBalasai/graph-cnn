@@ -145,6 +145,7 @@ def assign_states(graph):
             graph.nodes[node]["activation"] = activation
             kernel_size = (np.random.choice([1, 3, 5]),) * 2
             graph.nodes[node]["kernel_size"] = kernel_size
+            
 
         elif layer_type == "LocallyConnected2D":
             activation = np.random.choice(["relu", "sigmoid", "tanh"])
