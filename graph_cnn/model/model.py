@@ -114,7 +114,7 @@ def create_model(
                     req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))
                 else:
                     req_shape = max([nodes[x].shape[-1] for x in predecessors])
-                req_dimension = min([nodes[x].shape[1] for x in predecessors])
+                req_dimension = max([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors: 
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if (
@@ -141,10 +141,10 @@ def create_model(
     print(node_s)
     if use_mean:
         req_shape = mean([x.shape[-1] for x in node_s])
-        req_dimension = min([x.shape[1] for x in node_s])
+        req_dimension = max([x.shape[1] for x in node_s])
     else:
         req_shape = min([x.shape[-1] for x in node_s])
-        req_dimension = min([x.shape[1] for x in node_s])
+        req_dimension = max([x.shape[1] for x in node_s])
     print(req_shape, req_dimension)
     for node, _ in enumerate(node_s):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
