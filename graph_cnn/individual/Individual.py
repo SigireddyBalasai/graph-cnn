@@ -2,7 +2,11 @@ import networkx as nx
 import tensorflow as tf
 from matplotlib import pyplot as plt
 import numpy as np
-from graph_cnn.graph.generate import create_final_graph, create_random_graph, assign_states
+from graph_cnn.graph.generate import (
+    create_final_graph,
+    create_random_graph,
+    assign_states,
+)
 from graph_cnn.graph.generate import cross_over as crossover
 from graph_cnn.graph.generate import mutate as mutate_dag
 from graph_cnn.model import create_model
@@ -17,7 +21,9 @@ class Individual:
         self.nodes = nodes
         self.edges = edges
         self.graph = self.create_random_graph()
-        self.model = create_model(self.graph, input_shape=self.input_size, num_classes=self.output_size)
+        self.model = create_model(
+            self.graph, input_shape=self.input_size, num_classes=self.output_size
+        )
         self.score = 0
 
     def create_random_graph(self):
@@ -52,7 +58,11 @@ class Individual:
     def evaluate_single(self, data):
         loss = tf.keras.losses.CategoricalCrossentropy()
         optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
-        self.model.compile(optimizer=optimizer, loss=loss, metrics=tf.keras.metrics.CategoricalAccuracy())
+        self.model.compile(
+            optimizer=optimizer,
+            loss=loss,
+            metrics=tf.keras.metrics.CategoricalAccuracy(),
+        )
         ans = self.model.evaluate(data[0], data[1], verbose=0)
         return ans
 
@@ -80,10 +90,14 @@ class Individual:
         print("saving model")
         score = self.score
         print(score, "score")
-        tf.keras.utils.plot_model(self.model, to_file=f'{folder}/{self.score}.png', show_shapes=True)
+        tf.keras.utils.plot_model(
+            self.model, to_file=f"{folder}/{self.score}.png", show_shapes=True
+        )
         print(f"image saved in {folder}/{self.score}.png")
-        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        model.save(f'{folder}/{self.score}')
+        model.compile(
+            optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"]
+        )
+        model.save(f"{folder}/{self.score}")
         self.model = model
 
     def get_score(self):

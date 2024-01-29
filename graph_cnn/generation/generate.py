@@ -3,8 +3,23 @@ import random
 import os
 import tensorflow as tf
 
+
 class Generation:
-    def __init__(self, input_size, output_size, nodes, edges, population, limit, train_ds, test_ds,loss,optimizer,metrics,callbacks):
+    def __init__(
+        self,
+        input_size,
+        output_size,
+        nodes,
+        edges,
+        population,
+        limit,
+        train_ds,
+        test_ds,
+        loss,
+        optimizer,
+        metrics,
+        callbacks,
+    ):
         self.input_size = input_size
         self.output_size = output_size
         self.nodes = nodes
@@ -21,8 +36,11 @@ class Generation:
         self.create_population()
 
     def create_population(self):
-        self.population = [Individual(self.input_size, self.output_size, self.nodes, self.edges) for _ in range(self.population)]
-    
+        self.population = [
+            Individual(self.input_size, self.output_size, self.nodes, self.edges)
+            for _ in range(self.population)
+        ]
+
     def score_population(self):
         population = self.population
         for individual in population:
@@ -30,11 +48,11 @@ class Generation:
             print("individual score: ", individual.get_score())
         population.sort(key=lambda x: x.get_score(), reverse=True)
         self.population = population
-    
+
     def get_best_individual(self):
         return self.population[0]
 
-    def mutate_population(self,mutation_rate):
+    def mutate_population(self, mutation_rate):
         mutated = []
         for individual in self.population:
             if random.random() < mutation_rate:
@@ -44,37 +62,44 @@ class Generation:
                 except:
                     pass
         self.population += mutated
-    
+
     def crossover_population(self, crossover_rate):
         crossed = []
         for i in range(len(self.population)):
             if random.random() < crossover_rate:
-                child1 , child2 = self.population[i].crossover(self.population[i-1])
+                child1, child2 = self.population[i].crossover(self.population[i - 1])
                 crossed.append(child1)
                 crossed.append(child2)
         self.population += crossed
         return self.population
-    
+
     def next_generation(self, mutation_rate, crossover_rate):
         self.score_population()
         self.mutate_population(mutation_rate)
-        #self.crossover_population(crossover_rate)
+        # self.crossover_population(crossover_rate)
         self.population.sort(key=lambda x: x.get_score(), reverse=True)
         return self.population
-    
+
     def run(self, n, mutation_rate, crossover_rate):
         for i in range(n):
-            os.makedirs(f'generation_{self.generation}', exist_ok=True)
-            print(f'Generation: {self.generation}')
+            os.makedirs(f"generation_{self.generation}", exist_ok=True)
+            print(f"Generation: {self.generation}")
             self.next_generation(mutation_rate, crossover_rate)
-            print(f'Best score: {self.population[0].get_score()}')
+            print(f"Best score: {self.population[0].get_score()}")
             model = self.population[0].get_model()
-            model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+            model.compile(
+                loss=self.loss, optimizer=self.optimizer, metrics=self.metrics
+            )
             model.summary()
-            model.fit(self.train_ds, epochs=25, validation_data=self.test_ds,callbacks=self.callbacks)
-            print('---------------------------------------------------')
+            model.fit(
+                self.train_ds,
+                epochs=25,
+                validation_data=self.test_ds,
+                callbacks=self.callbacks,
+            )
+            print("---------------------------------------------------")
             for individual in self.population:
                 print("individual score: ", individual.get_score())
-                #print("individual architecture: ", individual.get_model().summary())
-                individual.save_model(f'generation_{self.generation}')
+                # print("individual architecture: ", individual.get_model().summary())
+                individual.save_model(f"generation_{self.generation}")
             self.generation += 1
