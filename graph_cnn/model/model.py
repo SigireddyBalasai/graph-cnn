@@ -50,11 +50,11 @@ def load_layer(layer):
     Raises:
         ValueError: If the layer type is not supported.
     """
-    if layer["layer_type"] == "Conv2D":
+    if layer["layer_type"] == "Convolution":
         return keras.layers.Conv2D(
             filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
         )
-    elif layer["layer_type"] == "MaxPooling2D":
+    elif layer["layer_type"] == "MaxPooling":
         return keras.layers.MaxPooling2D(pool_size=layer["kernel_size"], strides=1)
     elif layer["layer_type"] == "AveragePooling2D":
         return keras.layers.AveragePooling2D(pool_size=layer["kernel_size"], strides=1)
@@ -84,29 +84,23 @@ def create_model(
     """
     nodes = {}
     input_layer = keras.layers.Input(shape=input_shape)
-    for node in graph.nodes():
-        predecessors = list(graph.predecessors(node))
+    for node_ in graph.nodes():
+        predecessors = list(graph.predecessors(node_))
         if not predecessors:
             filters = 32
-            print(graph.nodes[node])
-            lc = keras.layers.LocallyConnected2D(
-                filters=filters,
-                kernel_size=graph.nodes[node]["kernel_size"],
-                activation=graph.nodes[node]["activation"],
-                padding="valid",
-            )(input_layer)
             conv1 = keras.layers.Conv2D(
                 filters=filters,
-                kernel_size=graph.nodes[node]["kernel_size"],
-                activation=graph.nodes[node]["activation"],
+                kernel_size=graph.nodes[node_]["kernel_size"],
+                activation=graph.nodes[node_]["activation"],
                 padding="valid",
             )(input_layer)
-            current = load_layer(graph.nodes[node])(input_layer)
-            add = keras.layers.Add()([conv1, lc, current])
+            current = load_layer(graph.nodes[node_])(input_layer)
+            add = keras.layers.Concatenate()([conv1, current])
             normalized = keras.layers.BatchNormalization()(add)
             pool = keras.layers.MaxPooling2D()(normalized)
-            activaton = keras.layers.Activation(graph.nodes[node]["activation"])(pool)
-            nodes[node] = activaton
+            activaton = keras.layers.Activation(graph.nodes[node_]["activation"])(pool)
+            nodes[node_] = activaton
+            print('inputs_built')
         else:
             if len(predecessors) > 1:
                 if use_mean:
@@ -114,44 +108,29 @@ def create_model(
                 else:
                     req_shape = max([nodes[x].shape[-1] for x in predecessors])
                 req_dimension = min([nodes[x].shape[1] for x in predecessors])
-                for predecessor in predecessors:
+                for predecessor in predecessors: 
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if (
                         nodes[predecessor].shape[-1] != req_shape
                         or nodes[predecessor].shape[1] != req_dimension
                     ):
-                        node = {
-                            "layer_type": graph.nodes[node],
-                            "filters": req_shape,
-                            "kernel_size": (kernel_size, kernel_size),
-                        }
+                        node = graph.nodes[predecessor]
+                        node["filters"] = req_shape
+                        node["kernel_size"] = (kernel_size, kernel_size)
                         layer = load_layer(node)(nodes[predecessor])
                         normalized = keras.layers.BatchNormalization()(layer)
                         activation = keras.layers.Activation(
-                            graph.nodes[node]["activation"]
+                            node["activation"]
                         )(normalized)
-                        add = keras.layers.Add()([activation, nodes[predecessor]])
+                        add = keras.layers.Concatenate()([activation, nodes[predecessor]])
                         nodes[predecessor] = add
+                concat = keras.layers.Concatenate()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
-            if concat.shape[1] - graph.nodes[node]["kernel_size"][0] + 1 > 5:
-                filters = concat.shape[-1] * random.uniform(1, 3)
-                node = {
-                    "layer_type": graph.nodes[node],
-                    "filters": filters,
-                    "kernel_size": graph.nodes[node]["kernel_size"],
-                }
-                layer = load_layer(node)(concat)
-                normalized = keras.layers.BatchNormalization()(layer)
-                activation = keras.layers.Activation(graph.nodes[node]["activation"])(
-                    normalized
-                )
-                add = keras.layers.Add()([activation, concat])
-                nodes[node] = add
-            else:
-                nodes[node] = concat
+            nodes[node_] = concat
+        print('predecessors_built')
         dropout_prob = random.uniform(0.2, 1)
-        nodes[node] = keras.layers.Dropout(dropout_prob)(nodes[node])
+        nodes[node_] = keras.layers.Dropout(dropout_prob)(nodes[node_])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     if use_mean:
         req_shape = min([x.shape[-1] for x in node_s])
@@ -176,7 +155,8 @@ def create_model(
                 normalized
             )
             add = keras.layers.Add()([activation, node_s[node]])
-            node_s[node] = add
+            node_s[node_] = add
+    print('final_layer_built')
     if include_aux:
         aux = aux_layer(node_s[-1], num_classes)
         model = keras.models.Model(inputs=input_layer, outputs=aux)
