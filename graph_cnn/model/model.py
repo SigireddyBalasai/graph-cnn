@@ -97,7 +97,12 @@ def create_model(
             node_d = graph.nodes[node_]
             node_d["filters"] = filters
             current = load_layer(node_d)(input_layer)
-            add = keras.layers.Concatenate()([conv1, current])
+            conv_shape = conv1.shape[1]
+            current_shape = current.shape[1]
+            kernel_size = current_shape - conv_shape + 1
+            node_d["kernel_size"] = (kernel_size, kernel_size)
+            current = load_layer(node_d)(current)
+            add = keras.layers.Add()([conv1, current])
             normalized = keras.layers.BatchNormalization()(add)
             pool = keras.layers.MaxPooling2D()(normalized)
             activaton = keras.layers.Activation(graph.nodes[node_]["activation"])(pool)
@@ -125,7 +130,7 @@ def create_model(
                             node["activation"]
                         )(normalized)
                         nodes[predecessor] = activation
-                concat = keras.layers.Concatenate()([nodes[x] for x in predecessors])
+                concat = keras.layers.Add()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
             nodes[node_] = concat
