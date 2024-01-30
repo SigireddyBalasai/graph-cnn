@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from graph_cnn.graph.generate import create_final_graph
-from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Add,Dropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D
+from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Concatenate,Dropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D
 
 
 def set_seed(seed):
@@ -53,7 +53,7 @@ def load_layer(layer):
     """
     if layer["layer_type"] == "Convolution":
         return Conv2D(
-            filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
+            filters=layer["filters"], kernel_size=layer["kernel_size"], pConcatenateing="valid"
         )
     elif layer["layer_type"] == "MaxPooling2D":
         return MaxPooling2D(pool_size=layer["kernel_size"], strides=1)
@@ -61,7 +61,7 @@ def load_layer(layer):
         return AveragePooling2D(pool_size=layer["kernel_size"], strides=1)
     elif layer["layer_type"] == "LocallyConnected2D":
         return LocallyConnected2D(
-            filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
+            filters=layer["filters"], kernel_size=layer["kernel_size"], pConcatenateing="valid"
         )
     raise ValueError(f"Unsupported layer type: {layer['layer_type']}")
 
@@ -93,7 +93,7 @@ def create_model(
                 filters=filters,
                 kernel_size=graph.nodes[node_]["kernel_size"],
                 activation=graph.nodes[node_]["activation"],
-                padding="valid",
+                pConcatenateing="valid",
             )(input_layer)
             node_d = graph.nodes[node_]
             node_d["filters"] = filters
@@ -114,8 +114,8 @@ def create_model(
             elif conv_dim != filters:
                 conv1 = load_layer(node_d)(conv1)
             print(conv1.shape, current.shape)
-            add = Add()([conv1, current])
-            normalized = BatchNormalization()(add)
+            Concatenate = Concatenate()([conv1, current])
+            normalized = BatchNormalization()(Concatenate)
             pool = MaxPooling2D()(normalized)
             activaton = Activation(graph.nodes[node_]["activation"])(pool)
             drop = Dropout(0.9)(activaton)
@@ -124,9 +124,9 @@ def create_model(
         else:
             if len(predecessors) > 1:
                 if use_mean:
-                    req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))*2
+                    req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))
                 else:
-                    req_shape = max([nodes[x].shape[-1] for x in predecessors])*2
+                    req_shape = max([nodes[x].shape[-1] for x in predecessors])
                 req_dimension = max([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors: 
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
@@ -137,7 +137,7 @@ def create_model(
                         ) and kernel_size >=1
                     ):
                         node = graph.nodes[predecessor]
-                        node["filters"] = req_shape
+                        node["filters"] = req_shape*2
                         node["kernel_size"] = (kernel_size, kernel_size)
                         layer = load_layer(node)(nodes[predecessor])
                         normalized = BatchNormalization()(layer)
@@ -146,7 +146,7 @@ def create_model(
                         )(normalized)
                         drop = Dropout(0.9)(activation)
                         nodes[predecessor] = drop
-                concat = Add()([nodes[x] for x in predecessors])
+                concat = Concatenate()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
             nodes[node_] = concat
@@ -156,10 +156,10 @@ def create_model(
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     print(node_s)
     if use_mean:
-        req_shape = max([x.shape[-1] for x in node_s])*2
+        req_shape = max([x.shape[-1] for x in node_s])
         req_dimension = max([x.shape[1] for x in node_s])
     else:
-        req_shape = max([x.shape[-1] for x in node_s])*2
+        req_shape = max([x.shape[-1] for x in node_s])
         req_dimension = max([x.shape[1] for x in node_s])
     for node, _ in enumerate(node_s):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
@@ -168,7 +168,7 @@ def create_model(
             or node_s[node].shape[1] != req_dimension or kernel_size >= 1
         ):
             nodet = graph.nodes[node]
-            nodet["filters"] = req_shape
+            nodet["filters"] = req_shape*2
             nodet["kernel_size"] = (kernel_size, kernel_size)
             print(kernel_size)
             layer = load_layer(nodet)(node_s[node])
@@ -177,10 +177,8 @@ def create_model(
                 normalized
             )
             drop = Dropout(0.9)(activation)
-            node_s[node] = drop
-            print(node_s)
-            add = Add()([activation, node_s[node]])
-            nodes[node_] = add
+            conc = Concatenate()([activation, drop])
+            nodes[node_] = conc
     if include_aux:
         last_node = list(nodes.keys())[-1]
         aux = aux_layer(nodes[last_node], num_classes)
