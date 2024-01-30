@@ -107,6 +107,7 @@ def create_model(
             print(filters, current_dim, conv_dim, kernel_size)
             node_d["kernel_size"] = (kernel_size, kernel_size)
             node_d["filters"] = filters
+            node_d['layer_type'] = 'Convolution'
             if current_dim != filters:
                 current = load_layer(node_d)(current)
             elif conv_dim != filters:
@@ -121,9 +122,9 @@ def create_model(
         else:
             if len(predecessors) > 1:
                 if use_mean:
-                    req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))
+                    req_shape = int(mean([nodes[x].shape[-1] for x in predecessors]))*2
                 else:
-                    req_shape = max([nodes[x].shape[-1] for x in predecessors])
+                    req_shape = max([nodes[x].shape[-1] for x in predecessors])*2
                 req_dimension = max([nodes[x].shape[1] for x in predecessors])
                 for predecessor in predecessors: 
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
@@ -152,12 +153,11 @@ def create_model(
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     print(node_s)
     if use_mean:
-        req_shape = mean([x.shape[-1] for x in node_s])
+        req_shape = max([x.shape[-1] for x in node_s])*2
         req_dimension = max([x.shape[1] for x in node_s])
     else:
-        req_shape = min([x.shape[-1] for x in node_s])
+        req_shape = max([x.shape[-1] for x in node_s])*2
         req_dimension = max([x.shape[1] for x in node_s])
-    print(req_shape, req_dimension)
     for node, _ in enumerate(node_s):
         kernel_size = node_s[node].shape[1] - req_dimension + 1
         if (

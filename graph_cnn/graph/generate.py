@@ -136,7 +136,7 @@ def assign_states(graph):
     """
     for node in graph.nodes():
         layer_type = np.random.choice(
-            ["Convolution", "MaxPooling2D","AveragePooling2D"]
+            ["Convolution", "MaxPooling2D","AveragePooling2D"], p=[0.9, 0.05, 0.05]
         )
         graph.nodes[node]["layer_type"] = layer_type
         
