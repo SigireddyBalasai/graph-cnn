@@ -136,25 +136,25 @@ def assign_states(graph):
     """
     for node in graph.nodes():
         layer_type = np.random.choice(
-            ["Convolution", "LocallyConnected2D", "MaxPooling"]
+            ["Convolution", "MaxPooling2D","AveragePooling2D"]
         )
         graph.nodes[node]["layer_type"] = layer_type
-
+        
         if layer_type == "Convolution":
-            activation = np.random.choice(["relu", "sigmoid", "tanh"])
+            activation = np.random.choice(["relu", "sigmoid", "tanh",'elu','leaky_relu'])
             graph.nodes[node]["activation"] = activation
             kernel_size = (np.random.choice([1, 3, 5]),) * 2
             graph.nodes[node]["kernel_size"] = kernel_size
             
 
         elif layer_type == "LocallyConnected2D":
-            activation = np.random.choice(["relu", "sigmoid", "tanh"])
+            activation = np.random.choice(["relu", "sigmoid", "tanh",'elu','leaky_relu'])
             graph.nodes[node]["activation"] = activation
             kernel_size = (np.random.choice([1, 3, 5]),) * 2
             graph.nodes[node]["kernel_size"] = kernel_size
 
-        elif layer_type == "MaxPooling":
-            activation = np.random.choice(["relu", "sigmoid", "tanh"])
+        elif layer_type == "MaxPooling2D" or layer_type == "AveragePooling2D":
+            activation = np.random.choice(["relu", "sigmoid", "tanh",'elu','leaky_relu'])
             pool_size = (np.random.choice([2, 3, 4]),) * 2
             graph.nodes[node]["kernel_size"] = pool_size
             graph.nodes[node]["activation"] = activation

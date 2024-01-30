@@ -55,7 +55,7 @@ def load_layer(layer):
         return Conv2D(
             filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
         )
-    elif layer["layer_type"] == "MaxPooling":
+    elif layer["layer_type"] == "MaxPooling2D":
         return MaxPooling2D(pool_size=layer["kernel_size"], strides=1)
     elif layer["layer_type"] == "AveragePooling2D":
         return AveragePooling2D(pool_size=layer["kernel_size"], strides=1)
@@ -88,6 +88,7 @@ def create_model(
         predecessors = list(graph.predecessors(node_))
         if not predecessors:
             filters = 32
+            print(graph.nodes[node_])
             conv1 = Conv2D(
                 filters=filters,
                 kernel_size=graph.nodes[node_]["kernel_size"],
@@ -103,9 +104,14 @@ def create_model(
             conv_dim = conv1.shape[-1]
             current_dim = current.shape[-1]
             filters = max(conv_dim, current_dim)
+            print(filters, current_dim, conv_dim, kernel_size)
             node_d["kernel_size"] = (kernel_size, kernel_size)
             node_d["filters"] = filters
-            current = load_layer(node_d)(current)
+            if current_dim != filters:
+                current = load_layer(node_d)(current)
+            elif conv_dim != filters:
+                conv1 = load_layer(node_d)(conv1)
+            print(conv1.shape, current.shape)
             add = Add()([conv1, current])
             normalized = BatchNormalization()(add)
             pool = MaxPooling2D()(normalized)
@@ -122,8 +128,10 @@ def create_model(
                 for predecessor in predecessors: 
                     kernel_size = nodes[predecessor].shape[1] - req_dimension + 1
                     if (
+                        (
                         nodes[predecessor].shape[-1] != req_shape
-                        or nodes[predecessor].shape[1] != req_dimension or kernel_size >=1
+                        or nodes[predecessor].shape[1] != req_dimension
+                        ) and kernel_size >=1
                     ):
                         node = graph.nodes[predecessor]
                         node["filters"] = req_shape
