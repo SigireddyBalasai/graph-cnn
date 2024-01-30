@@ -100,6 +100,7 @@ def create_model(
             current = load_layer(node_d)(input_layer)
             conv_shape = conv1.shape[1]
             current_shape = current.shape[1]
+            print(conv_shape,current_shape)
             kernel_size = abs(current_shape - conv_shape) + 1
             conv_dim = conv1.shape[-1]
             current_dim = current.shape[-1]
@@ -116,7 +117,8 @@ def create_model(
             normalized = BatchNormalization()(add)
             pool = MaxPooling2D()(normalized)
             activaton = Activation(graph.nodes[node_]["activation"])(pool)
-            nodes[node_] = activaton
+            drop = Dropout(0.9)(activaton)
+            nodes[node_] = drop
             print('inputs_built')
         else:
             if len(predecessors) > 1:
@@ -141,7 +143,8 @@ def create_model(
                         activation = Activation(
                             node["activation"]
                         )(normalized)
-                        nodes[predecessor] = activation
+                        drop = Dropout(0.9)(activation)
+                        nodes[predecessor] = drop
                 concat = Add()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
@@ -173,7 +176,8 @@ def create_model(
             activation = Activation(graph.nodes[node]["activation"])(
                 normalized
             )
-            node_s[node] = activation
+            drop = Dropout(0.9)(activation)
+            node_s[node] = drop
             print(node_s)
             add = Add()([activation, node_s[node]])
             nodes[node_] = add
