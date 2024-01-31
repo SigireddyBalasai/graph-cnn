@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from graph_cnn.graph.generate import create_final_graph
-from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Concatenate,Dropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D,Add
+from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Concatenate,AlphaDropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D,Add
 from keras.optimizers import SGD
 
 def set_seed(seed):
@@ -115,7 +115,7 @@ def create_model(
             normalized = BatchNormalization()(concatenate)
             pool = MaxPooling2D()(normalized)
             activaton = Activation(graph.nodes[node_]["activation"])(pool)
-            drop = Dropout(0.2)(activaton)
+            drop = AlphaDropout(0.2)(activaton)
             nodes[node_] = drop
             print(drop)
         else:
@@ -147,7 +147,7 @@ def create_model(
                         activation = Activation(
                             node["activation"]
                         )(normalized)
-                        drop = Dropout(0.2)(activation)
+                        drop = AlphaDropout(0.2)(activation)
                         nodes[predecessor] = drop
                     node_list.append(drop)
                     print(graph.nodes[predecessor],predecessor)
@@ -165,11 +165,11 @@ def create_model(
             activation = Activation(graph.nodes[node_]["activation"])(
                 normalized
             )
-            drop = Dropout(0.2)(activation)
+            drop = AlphaDropout(0.2)(activation)
             nodes[node_] = drop
             print(concat)
-        dropout_prob = random.uniform(0.2, 1)
-        nodes[node_] = Dropout(dropout_prob)(nodes[node_])
+        AlphaDropout_prob = random.uniform(0.2, 1)
+        nodes[node_] = AlphaDropout(AlphaDropout_prob)(nodes[node_])
     node_s = [nodes[node] for node in graph.nodes() if graph.out_degree(node) == 0]
     if use_mean:
         req_shape = max([x.shape[-1] for x in node_s])*2
@@ -191,7 +191,7 @@ def create_model(
             activation = Activation(graph.nodes[node]["activation"])(
                 normalized
             )
-            drop = Dropout(0.2)(activation)
+            drop = AlphaDropout(0.2)(activation)
             conc = Concatenate()([activation, drop])
             nodes[node_] = conc
     if include_aux:
