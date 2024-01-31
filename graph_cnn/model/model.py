@@ -6,7 +6,7 @@ import numpy as np
 import networkx as nx
 from matplotlib import pyplot as plt
 from graph_cnn.graph.generate import create_final_graph
-from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Concatenate,Dropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D
+from keras.layers import Conv2D,GlobalAveragePooling2D,Flatten,Dense,Input,Concatenate,Dropout,BatchNormalization,Activation,AveragePooling2D,LocallyConnected2D,MaxPooling2D,Add
 
 
 def set_seed(seed):
@@ -114,7 +114,7 @@ def create_model(
             elif conv_dim != filters:
                 conv1 = load_layer(node_d)(conv1)
             print(conv1.shape, current.shape)
-            concatenate = Concatenate()([conv1, current])
+            concatenate = Add()([conv1, current])
             normalized = BatchNormalization()(concatenate)
             pool = MaxPooling2D()(normalized)
             activaton = Activation(graph.nodes[node_]["activation"])(pool)
@@ -146,7 +146,7 @@ def create_model(
                         )(normalized)
                         drop = Dropout(0.9)(activation)
                         nodes[predecessor] = drop
-                concat = Concatenate()([nodes[x] for x in predecessors])
+                concat = Add()([nodes[x] for x in predecessors])
             else:
                 concat = nodes[predecessors[0]]
             nodes[node_] = concat
