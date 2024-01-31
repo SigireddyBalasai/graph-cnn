@@ -53,7 +53,7 @@ def load_layer(layer):
     """
     if layer["layer_type"] == "Convolution":
         return Conv2D(
-            filters=layer["filters"], kernel_size=layer["kernel_size"], pConcatenateing="valid"
+            filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
         )
     elif layer["layer_type"] == "MaxPooling2D":
         return MaxPooling2D(pool_size=layer["kernel_size"], strides=1)
@@ -61,7 +61,7 @@ def load_layer(layer):
         return AveragePooling2D(pool_size=layer["kernel_size"], strides=1)
     elif layer["layer_type"] == "LocallyConnected2D":
         return LocallyConnected2D(
-            filters=layer["filters"], kernel_size=layer["kernel_size"], pConcatenateing="valid"
+            filters=layer["filters"], kernel_size=layer["kernel_size"], padding="valid"
         )
     raise ValueError(f"Unsupported layer type: {layer['layer_type']}")
 
@@ -93,7 +93,7 @@ def create_model(
                 filters=filters,
                 kernel_size=graph.nodes[node_]["kernel_size"],
                 activation=graph.nodes[node_]["activation"],
-                pConcatenateing="valid",
+                padding="valid",
             )(input_layer)
             node_d = graph.nodes[node_]
             node_d["filters"] = filters
@@ -114,8 +114,8 @@ def create_model(
             elif conv_dim != filters:
                 conv1 = load_layer(node_d)(conv1)
             print(conv1.shape, current.shape)
-            Concatenate = Concatenate()([conv1, current])
-            normalized = BatchNormalization()(Concatenate)
+            concatenate = Concatenate()([conv1, current])
+            normalized = BatchNormalization()(concatenate)
             pool = MaxPooling2D()(normalized)
             activaton = Activation(graph.nodes[node_]["activation"])(pool)
             drop = Dropout(0.9)(activaton)
